@@ -1,6 +1,7 @@
 RHEMS Japanのこだわり
 ================================
 RHEMS JapanはとことんCommand Line Interface(cli)にこだわる会社です。
+
 その理由としては
 
 	・作業の効率化
@@ -10,7 +11,8 @@ RHEMS JapanはとことんCommand Line Interface(cli)にこだわる会社です
 RHEMS Japan is very particular about
 ================================
 RHEMS Japan is very particular about uing Command Line Interface(cli)
-The reasons are:
+
+he reasons are:
 
 	・improvement of operational efficiency
 	・by using cli, history can be checked easily
