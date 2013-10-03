@@ -87,8 +87,15 @@ RunningInstance() {
 CreateTags() {
 	echo "======== Create Tags ========"
 	### CreateTag
-	ec2-create-tags ${_AmazonLinuxAMI} ${INSTANCE_NAME} --region ${_REGION} --tag "Name=${_Name}" --tag "hostname=${_Host}" >/dev/null 2>&1
+	ec2-create-tags ${_ETH0} ${INSTANCE_NAME} --region ${_REGION} --tag "Name=${_Name}" --tag "hostname=${_Host}" >/dev/null 2>&1
 	[ "$?" = "0" ] && ( echo -n "Create Tag : " && ColorT g "[ OK ]" ) || ColorT r "CreateTag NG"
+	## CreateVolTags
+        for x in `ec2-describe-instances --region ${_REGION} --filter "tag:Name=${_Name}" | grep BLOCKDEVICE | awk '{print $3}'`
+        do
+                ec2-create-tags $x --region ${_REGION} --tag "Name=${_Name}" >/dev/null 2>&1
+        done
+	[ "$?" = "0" ] && ( echo -n "CreateVol Tag : " && ColorT g "[ OK ]" ) || ColorT r "CreateVolTag NG"
+	
 }
 
 Addeth1() {
