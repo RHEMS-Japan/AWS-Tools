@@ -1,0 +1,132 @@
+#!/usr/bin/env python
+
+import getopt
+import boto
+import os
+import sys
+import urllib
+
+usage_string = """
+SYNOPSIS
+    rcf_invalidate [-a/--access_key <access_key>] [-s/--secret_key <secret_key>] <options>
+
+	<options>
+		[-d/--dist]
+				specify cloud front distribution id.
+
+		[-r/--request]	<path_pattern>
+				add a invalidate path to distribution.
+				e.g. /*.jpg /hoge/*.pdf
+
+		[-f/--request_file]	<invalidation_file>
+				add a invalidate path list to distribution.
+"""
+def usage():
+	print usage_string
+	sys.exit()
+
+def _print_distributions(dists):
+	print "%-16s %-12s %-38s %s" % ("ID", "Status", "Domain Name", "Origin")
+	print "-"*80
+	for d in dists:
+		print "%-16s %-12s %-38s %-30s" % (d.id, d.status, d.domain_name, d.origin)
+		for cname in d.cnames:
+			print " "*29, "CNAME => %s" % cname
+	print ""
+
+def cf_list_distribution(cf):
+	print "Download Distributions"
+	_print_distributions(cf.get_all_distributions())
+#	print "Streaming Distributions"
+#	_print_distributions(cf.get_all_streaming_distributions())
+	sys.exit()
+
+def cf_add_invalidate(cf, dist_id, path_list):
+	try:
+		req = cf.create_invalidation_request(dist_id, path_list)
+		print 'Request ID:', req.id
+	except boto.cloudfront.exception.CloudFrontServerError, inst:
+		print inst.reason
+	sys.exit()
+	
+
+def cf_list_invalidate(cf, dist_id):
+	try:
+		results = cf.get_invalidation_requests(dist_id)
+		if results:
+                        print "%-16s %-12s" % ("ID", "Status")
+                        print "-"*80
+			for result in results:
+				if result.status == "InProgress":
+					result = result.get_invalidation_request()
+					print "%-16s %-12s" % (result.id, result.status)
+					for path in result.paths:
+						print " "*16, urllib.unquote(path)
+		else:
+			print "no invalidation process." 
+	except boto.cloudfront.exception.CloudFrontServerError, inst:
+		print 'Distribution',inst.reason
+	sys.exit()
+
+def read_file(fp):
+	newlines = []
+	if os.path.isfile(fp):
+		try:
+			alllines = open(fp).read()
+			for nl in alllines.split("\n"):
+				if len(nl.strip())>0:
+					newlines.append(nl)
+			return newlines
+		except:
+			print "file can not read."
+
+	else:
+		print "file not found..."
+	sys.exit()
+
+def main():
+	try:
+		opts, args = getopt.getopt(
+			sys.argv[1:], 'a:d:f:hr:s:',
+			['access_key=', 'dist', 'request_file=', 'help', 'request=', 'secret_key=']
+		)
+	except:
+		usage()
+	command = None
+	aws_access_key_id = None
+	aws_secret_access_key = None
+	target_dist = None
+	request_path_list = None
+	for o, a in opts:
+		if o in ('-h', '--help'):
+			usage()
+			sys.exit()
+		if o in ('-a', '--access_key'):
+			aws_access_key_id = a
+		if o in ('-s', '--secret_key'):
+			aws_secret_access_key = a
+		if o in ('-d', '--dist'):
+			target_dist = a
+		if o in ('-r', '--request'):
+			request_path_list = [a]
+			command = 'request'
+                if o in ('-f', '--request_file'):
+                        request_path_list = read_file(a)
+			command = 'request'
+	cf = boto.connect_cloudfront(aws_access_key_id=aws_access_key_id,
+					aws_secret_access_key=aws_secret_access_key)
+
+	if command == 'request':
+		if len(request_path_list) > 0:
+			cf_add_invalidate(cf, target_dist, request_path_list)
+		else:
+			print "missing path pattern."
+			sys.exit()
+	elif command == None:
+		if target_dist == None:
+			cf_list_distribution(cf)
+		else:
+			cf_list_invalidate(cf, target_dist)		
+
+if __name__ == "__main__":
+	main()
