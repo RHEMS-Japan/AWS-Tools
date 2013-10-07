@@ -12,7 +12,7 @@ RHEMS Japan is very particular about
 ================================
 RHEMS Japan is very particular about uing Command Line Interface(cli)
 
-he reasons are:
+The reasons are:
 
 	・improvement of operational efficiency
 	・by using cli, history can be checked easily
