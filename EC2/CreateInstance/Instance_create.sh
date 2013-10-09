@@ -87,12 +87,12 @@ RunningInstance() {
 CreateTags() {
 	echo "======== Create Tags ========"
 	### CreateTag
-	ec2-create-tags ${_ETH0} ${INSTANCE_NAME} --region ${_REGION} --tag "Name=${_Name}" --tag "hostname=${_Host}" >/dev/null 2>&1
+	ec2-create-tags ${_ETH0} ${INSTANCE_NAME} --region ${_REGION} --tag "Name=${_AWSNAME}" --tag "hostname=${_Host}" >/dev/null 2>&1
 	[ "$?" = "0" ] && ( echo -n "Create Tag : " && ColorT g "[ OK ]" ) || ColorT r "CreateTag NG"
 	## CreateVolTags
-        for x in `ec2-describe-instances --region ${_REGION} --filter "tag:Name=${_Name}" | grep BLOCKDEVICE | awk '{print $3}'`
+        for x in `ec2-describe-instances --region ${_REGION} --filter "tag:Name=${_AWSNAME}" | grep BLOCKDEVICE | awk '{print $3}'`
         do
-                ec2-create-tags $x --region ${_REGION} --tag "Name=${_Name}" >/dev/null 2>&1
+                ec2-create-tags $x --region ${_REGION} --tag "Name=${_AWSNAME}" >/dev/null 2>&1
         done
 	[ "$?" = "0" ] && ( echo -n "CreateVol Tag : " && ColorT g "[ OK ]" ) || ColorT r "CreateVolTag NG"
 	
@@ -100,9 +100,9 @@ CreateTags() {
 
 Addeth1() {
 	echo "======== Add eth1 ========"
-	ENI_RUN_RESULT=$(ec2-create-network-interface --region ${_REGION} -d ${_Name} -g ${_sg} ${_eth1sub})
+	ENI_RUN_RESULT=$(ec2-create-network-interface --region ${_REGION} -d ${_AWSNAME} -g ${_sg} ${_eth1sub})
 	END_ID=$(echo ${ENI_RUN_RESULT} | awk '{print $2}')
-	ec2-create-tags --region ${_REGION} ${END_ID} --tag "Name=${_Name}" >/dev/null 2>&1
+	ec2-create-tags --region ${_REGION} ${END_ID} --tag "Name=${_AWSNAME}" >/dev/null 2>&1
 	ec2-attach-network-interface  --region ${_REGION} ${END_ID} -i ${INSTANCE_NAME} -d 1 >/dev/null 2>&1
 	[ "$?" = "0" ] && ( echo -n "Add eth1 : " && ColorT g "[ OK ]" ) || ColorT r "Add eth1 NG"
 }
@@ -144,7 +144,8 @@ if [ ! -n "${_Name}" ]; then
 fi
 
 ### MakeHostname
-_Host=${_Host_prefix}_${_Name}.${_Host_domain}
+_AWSNAME=${_Host_prefix}_${_Name}
+_Host=${_AWSNAME}.${_Host_domain}
 
 ## create_autorunsh
 cat << EOF > ${_autorunsh}
