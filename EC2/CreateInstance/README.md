@@ -3,6 +3,10 @@ AWS VPC インスタンスの作成(AmazonLinux専用)
 このツールを使うことでEBSやENIなどのtagが自動で設定されます。
 また、インスタンのNTPを日本に設定したりhostnameやhostsの編集なども行われます。
 
+
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/ivwK6NEw9fA/0.jpg)](http://www.youtube.com/watch?v=ivwK6NEw9fA)
+
+
 Configfile:
 
 	$ cat InstanceCreate.conf
